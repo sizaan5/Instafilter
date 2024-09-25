@@ -15,6 +15,20 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
+            VStack {
+                ShareLink(item: URL(string: "https://www.instagram.com/progasm_")!, subject: Text("iOS developer"), message: Text("Check instagram account"))
+                ShareLink(item: URL(string: "https://www.medium.sizaan5.com")!) {
+                    Label("iOS tutorials", systemImage: "swift")
+                }
+                .padding()
+                let example = Image(.example1)
+                ShareLink(item: example, preview: SharePreview("I am Groot!!", image: example)) {
+                    Label("Share Groot!!", systemImage: "swift")
+                }
+                .padding()
+            }
+            .padding()
+            
             PhotosPicker(selection: $pickerItems, maxSelectionCount: 3, matching: .any(of: [.images, .not(.screenshots)])) {
                 Label("Select a picture", systemImage: "photo")
             }
