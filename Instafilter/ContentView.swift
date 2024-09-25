@@ -6,43 +6,54 @@
 //
 
 import SwiftUI
+import CoreImage
+import CoreImage.CIFilterBuiltins
 
 struct ContentView: View {
-    @State private var blurAmount = 0.0
-    @State private var showingConfirmation = false
-    @State private var backgroundColor = Color.white
+    @State private var image: Image?
     
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-                .blur(radius: blurAmount)
-            Text("Hello, world!")
-                .blur(radius: blurAmount)
+            image?
+                .resizable()
+                .scaledToFit()
             
-            Slider(value: $blurAmount, in: 0...20)
-                .onChange(of: blurAmount) { oldValue, newValue in
-                    print("New value in \(newValue)")
+            //ContentUnavailableView("Oops!", systemImage: "swift", description: Text("No data found"))
+            ContentUnavailableView {
+                Label("No data", systemImage: "swift")
+            } description: {
+                Text("No data found")
+            } actions: {
+                Button("Refresh") {
+                    //refresh
                 }
-            
-            Button("Hello, World!") {
-                showingConfirmation = true
+                .buttonStyle(.borderedProminent)
             }
-            .frame(width: 300, height: 300)
-            .background(backgroundColor)
-            .confirmationDialog("Change background", isPresented: $showingConfirmation) {
-                Button("Red") { backgroundColor = .red }
-                Button("Green") { backgroundColor = .green }
-                Button("Gray") { backgroundColor = .gray }
-                Button("Yellow") { backgroundColor = .yellow }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("Select a new color")
-            }
-
         }
-        .padding()
+        .onAppear(perform: loadImage)
+    }
+    
+    func loadImage() {
+        //image = Image(.example1) // SwiftUI image
+        let inputImage = UIImage(resource: .example1)
+        let beginImage = CIImage(image: inputImage)
+        
+        let context = CIContext()
+        let currentFilter = CIFilter.pixellate()
+        currentFilter.inputImage = beginImage
+        
+        let amount = 1.0
+        let inputKeys = currentFilter.inputKeys
+        
+        if inputKeys.contains(kCIInputIntensityKey) { currentFilter.setValue(amount, forKey: kCIInputIntensityKey) }
+        if inputKeys.contains(kCIInputRadiusKey) { currentFilter.setValue(amount * 200, forKey: kCIInputRadiusKey) }
+        if inputKeys.contains(kCIInputScaleKey) { currentFilter.setValue(amount * 10, forKey: kCIInputScaleKey) }
+        
+        guard let outputImage = currentFilter.outputImage else { return }
+        guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else { return }
+        
+        let uiImage = UIImage(cgImage: cgImage)
+        image = Image(uiImage: uiImage)
     }
 }
 
