@@ -6,54 +6,38 @@
 //
 
 import SwiftUI
-import CoreImage
-import CoreImage.CIFilterBuiltins
+import PhotosUI
 
 struct ContentView: View {
-    @State private var image: Image?
+    
+    @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var selectedImages: [Image] = []
     
     var body: some View {
         VStack {
-            image?
-                .resizable()
-                .scaledToFit()
+            PhotosPicker(selection: $pickerItems, maxSelectionCount: 3, matching: .any(of: [.images, .not(.screenshots)])) {
+                Label("Select a picture", systemImage: "photo")
+            }
             
-            //ContentUnavailableView("Oops!", systemImage: "swift", description: Text("No data found"))
-            ContentUnavailableView {
-                Label("No data", systemImage: "swift")
-            } description: {
-                Text("No data found")
-            } actions: {
-                Button("Refresh") {
-                    //refresh
+            ScrollView {
+                ForEach(0..<selectedImages.count, id: \.self) { i in
+                    selectedImages[i]
+                        .resizable()
+                        .scaledToFit()
                 }
-                .buttonStyle(.borderedProminent)
+            }
+            
+        }
+        .onChange(of: pickerItems) {
+            Task {
+                self.selectedImages.removeAll()
+                for item in pickerItems {
+                    if let loadedImage = try await item.loadTransferable(type: Image.self) {
+                        selectedImages.append(loadedImage)
+                    }
+                }
             }
         }
-        .onAppear(perform: loadImage)
-    }
-    
-    func loadImage() {
-        //image = Image(.example1) // SwiftUI image
-        let inputImage = UIImage(resource: .example1)
-        let beginImage = CIImage(image: inputImage)
-        
-        let context = CIContext()
-        let currentFilter = CIFilter.pixellate()
-        currentFilter.inputImage = beginImage
-        
-        let amount = 1.0
-        let inputKeys = currentFilter.inputKeys
-        
-        if inputKeys.contains(kCIInputIntensityKey) { currentFilter.setValue(amount, forKey: kCIInputIntensityKey) }
-        if inputKeys.contains(kCIInputRadiusKey) { currentFilter.setValue(amount * 200, forKey: kCIInputRadiusKey) }
-        if inputKeys.contains(kCIInputScaleKey) { currentFilter.setValue(amount * 10, forKey: kCIInputScaleKey) }
-        
-        guard let outputImage = currentFilter.outputImage else { return }
-        guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else { return }
-        
-        let uiImage = UIImage(cgImage: cgImage)
-        image = Image(uiImage: uiImage)
     }
 }
 
