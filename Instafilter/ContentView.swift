@@ -7,11 +7,14 @@
 
 import SwiftUI
 import PhotosUI
+import StoreKit
 
 struct ContentView: View {
     
     @State private var pickerItems: [PhotosPickerItem] = []
     @State private var selectedImages: [Image] = []
+    
+    @Environment(\.requestReview) var requestReview
     
     var body: some View {
         VStack {
@@ -51,6 +54,9 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            requestReview()
         }
     }
 }
