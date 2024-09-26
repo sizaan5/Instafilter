@@ -7,25 +7,29 @@
 
 import SwiftUI
 import PhotosUI
-import StoreKit
 
 struct ContentView: View {
     
     @State private var processImage: Image?
     @State private var filterIntensity = 0.5
+    @State private var selectedItem: PhotosPickerItem?
     
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
                 
-                if let processImage {
-                    processImage
-                        .resizable()
-                        .scaledToFit()
-                } else {
-                    ContentUnavailableView("No picture", systemImage: "photo.badge.plus", description: Text("Tap to import a phot"))
+                PhotosPicker(selection: $selectedItem) {
+                    if let processImage {
+                        processImage
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        ContentUnavailableView("No picture", systemImage: "photo.badge.plus", description: Text("Tap to import a photo"))
+                    }
                 }
+                .buttonStyle(.plain)
+                .onChange(of: selectedItem, loadImage)
                 
                 Spacer()
                 
@@ -49,6 +53,15 @@ struct ContentView: View {
     
     func changeFilter() {
         
+    }
+    
+    func loadImage() {
+        Task {
+            guard let imageData = try await selectedItem?.loadTransferable(type: Data.self) else { return }
+            guard let inputIamge = UIImage(data: imageData) else { return }
+            
+                //more code to come
+        }
     }
 }
 
